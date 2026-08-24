@@ -1,0 +1,36 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: #ffffff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 4px;
+  padding: 16px;
+}
+
+.swatch {
+  aspect-ratio: 1;
+}
+
+#filters {
+  display: flex;
+  gap: 8px;
+  padding: 16px 16px 0;
+}
+
+#filters button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+#filters button.active {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
