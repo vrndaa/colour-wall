@@ -1,36 +1,162 @@
 * { box-sizing: border-box; }
 
+@font-face {
+  font-family: 'Ithaca';
+  src: url('fonts/Ithaca-LVB75.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 html, body {
   margin: 0;
+  height: 100%;
+  overflow: hidden;
   background: #ffffff;
+  color: #222;
+  font-family: sans-serif;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 4px;
-  padding: 16px;
+.book {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  perspective: 1800px;
 }
 
-.swatch {
-  aspect-ratio: 1;
+.page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
 }
 
-#filters {
+.flip-page {
+  transform-origin: left center;
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+  backface-visibility: hidden;
+  border-right: 1px solid #eee;
+}
+
+.flip-page.turned {
+  transform: rotateY(-160deg);
+}
+
+.cover {
+  z-index: 3;
+  cursor: pointer;
+}
+
+.intro {
+  z-index: 2;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.filters-bar {
   display: flex;
   gap: 8px;
-  padding: 16px 16px 0;
+  margin-bottom: 12px;
 }
 
-#filters button {
+.filter-btn {
+  font-family: 'Ithaca', sans-serif;
   padding: 6px 12px;
   border: 1px solid #ccc;
   background: #fff;
   cursor: pointer;
 }
 
-#filters button.active {
+.filter-btn.active {
   background: #222;
   color: #fff;
   border-color: #222;
+}
+
+.cover-cell {
+  background: #fff;
+}
+
+.swatch {
+  background: #fff;
+  box-sizing: border-box;
+  aspect-ratio: 1;
+}
+
+.swatch-fill {
+  width: 100%;
+  height: 100%;
+  filter: url(#grain-filter);
+}
+
+.swatch.selected .swatch-fill {
+  background-color: transparent;
+}
+
+/* ---- Split-right grid: same always-visible colored swatches as the
+   main gallery, just at a smaller cell size ---- */
+.split-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+}
+
+.cover-text {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 480px;
+  padding: 0 24px;
+}
+
+.cover-text h1 {
+  font-family: 'Ithaca', sans-serif;
+  font-size: 56px;
+  font-weight: 400;
+  margin: 0 0 12px;
+  letter-spacing: 0.02em;
+  color: #111;
+}
+
+.cover-text p {
+  font-size: 15px;
+  color: #666;
+  margin: 0;
+}
+
+.page-label {
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Intro page: blurb + explore button on the left, a scattered field
+   of real extracted photo colors on the right ---- */
+.intro-left {
+  flex: 0 0 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 56px;
+  box-sizing: border-box;
+}
+
+.intro-blurb {
+  font-size: 15px;
+  line-height: 1.65;
+  color: #444;
+  max-width: 420px;
+  margin: 0 0 24px;
+}
+
+.intro-right {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-scatter-tile {
+  position: absolute;
 }

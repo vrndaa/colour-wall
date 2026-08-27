@@ -7,17 +7,34 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="filters">
-  <button data-category="all" class="active">all</button>
-  <button data-category="sky">sky</button>
-  <button data-category="mountain">mountain</button>
-  <button data-category="water">water</button>
-  <button data-category="forest">forest</button>
-</div>
+  <div id="book" class="book">
 
-  <main id="grid" class="grid"></main>
+    <section id="cover" class="page flip-page cover">
+      <div class="cover-text">
+        <h1>memory wall</h1>
+        <p>eighty-five photographs, sorted by color instead of memory.</p>
+      </div>
+    </section>
+
+    <section id="intro" class="page flip-page intro">
+      <div id="intro-left" class="intro-left">
+        <p class="intro-blurb">
+          I chose eighty-five photographs and sorted them not by when or where
+          they were taken, but by what's in them — sky, mountain, water,
+          forest — and by the colors a computer pulled out of each one. What
+          you're about to see is that sorting, laid out as a grid you can
+          click through, one memory at a time.
+        </p>
+        <button id="explore-btn" class="filter-btn">explore</button>
+      </div>
+      <div id="intro-right" class="intro-right"></div>
+    </section>
+
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script src="cover.js"></script>
   <script src="grid.js"></script>
+  <script src="flip.js"></script>
 </body>
 </html>
