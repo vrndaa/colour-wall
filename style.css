@@ -57,13 +57,14 @@ html, body {
 
 .filters-bar {
   display: flex;
-  gap: 8px;
+  gap: 14px;
   margin-bottom: 12px;
 }
 
 .filter-btn {
   font-family: 'Ithaca', sans-serif;
-  padding: 6px 12px;
+  font-size: 20px;
+  padding: 10px 20px;
   border: 1px solid #ccc;
   background: #fff;
   cursor: pointer;
@@ -158,5 +159,12 @@ html, body {
 }
 
 .intro-scatter-tile {
+  position: absolute;
+}
+
+/* ---- Split-view left panel: scattered field of the open photo's own
+   extracted cluster colors, sitting behind the media/title (see
+   renderSplitScatter in grid.js) ---- */
+.split-scatter-tile {
   position: absolute;
 }

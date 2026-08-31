@@ -62,13 +62,13 @@ function getClusterColors(d) {
   return colors;
 }
 
-d3.csv('grid_data.csv').then(rows => {
+d3.csv('grid_data_updated.csv').then(rows => {
   console.log('Loaded rows:', rows.length);
   allRows = rows;
   renderCover(rows);
   renderIntroScatter(rows);
 }).catch(err => {
-  console.error('Could not load grid_data.csv', err);
+  console.error('Could not load grid_data_updated.csv', err);
 });
 
 // ---- Intro page scatter ----
@@ -108,6 +108,45 @@ function renderIntroScatter(rows) {
       left: (rand() * 92) + '%',
       top: (t * 92) + '%',
       backgroundColor: palette[Math.floor(rand() * palette.length)],
+    });
+    container.appendChild(tile);
+  }
+}
+
+// ---- Split-view background scatter ----
+
+// Same idea as renderIntroScatter, but scoped to one photo's own cluster
+// colors (not the whole dataset) and biased toward the bottom of the
+// panel rather than the top. Tiles are kept small and the container
+// they're painted into is overflow:hidden (see buildSplitView), so
+// nothing here can bleed past the panel edge.
+function renderSplitScatter(d, container) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  const colors = getClusterColors(d).map(c => c.hex);
+  if (colors.length === 0) return;
+
+  const rand = seededRandom(d.filename); // same photo -> same layout every time
+  const count = 75;
+
+  for (let i = 0; i < count; i++) {
+    const size = 10 + rand() * 30;
+
+    // Skews toward 1 instead of 0 (the opposite of renderIntroScatter's
+    // top-heavy taper), so tiles thin out near the top -- clearing space
+    // around the title label -- and get denser toward the bottom of the
+    // panel, below the photo.
+    const t = 1 - Math.pow(rand(), 2.2);
+
+    const tile = document.createElement('div');
+    tile.className = 'split-scatter-tile';
+    Object.assign(tile.style, {
+      width: size + 'px',
+      height: size + 'px',
+      left: (rand() * 92) + '%',
+      top: (t * 92) + '%',
+      backgroundColor: colors[Math.floor(rand() * colors.length)],
     });
     container.appendChild(tile);
   }
@@ -193,20 +232,20 @@ function buildSplitView() {
     justifyContent: 'center',
     padding: '32px',
     boxSizing: 'border-box',
-    overflow: 'visible',
+    overflow: 'hidden',
     position: 'relative',
   });
 
-  // Grainy color layer, sitting behind everything else in this panel.
-  // It's a separate element (not a background-color + filter on `left`
-  // itself) specifically so the grain filter doesn't also distort the
-  // photo and text sitting on top of it.
+  // Scattered-color background layer, sitting behind everything else in
+  // this panel. It's a separate element (not a background-color on `left`
+  // itself) so it can be cleared and repainted per-photo without touching
+  // the media/title/description nodes stacked on top of it.
   const bgLayer = document.createElement('div');
   bgLayer.id = 'split-left-bg';
   Object.assign(bgLayer.style, {
     position: 'absolute',
     inset: '0',
-    filter: 'url(#grain-filter)',
+    zIndex: '0',
   });
   left.appendChild(bgLayer);
 
@@ -284,7 +323,8 @@ function titleFromFilename(filename) {
 }
 
 // Picks black or white text depending on how light or dark a background
-// color is, so titles stay readable no matter which photo is open.
+// color is. Still used for the description text, which sits directly on
+// the scattered background rather than in its own opaque box.
 function getContrastTextColor(hex) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -309,67 +349,6 @@ function splitTitle(filename) {
   return [full, ''];
 }
 
-// Fills a container (meant to be the full left panel) with a continuous,
-// gapless grid of small cells, each colored with a real average color
-// sampled from the photo -- cropped and scaled the way CSS
-// background-size:cover would, so the color layout echoes the photo
-// stretched across the whole panel rather than squeezed into its own
-// aspect ratio. Colors are painted at partial opacity so the grid reads
-// as a soft, continuous color field rather than a mosaic of the photo.
-function renderPhotoColorField(imgSrc, naturalWidth, naturalHeight, panelWidth, panelHeight, container) {
-  const cellSize = 20;
-  const cols = Math.max(1, Math.round(panelWidth / cellSize));
-  const rows = Math.max(1, Math.round(panelHeight / cellSize));
-
-  const sampleImg = new Image();
-  sampleImg.onload = () => {
-    const srcAspect = naturalWidth / naturalHeight;
-    const dstAspect = panelWidth / panelHeight;
-    let sx, sy, sw, sh;
-    if (srcAspect > dstAspect) {
-      sh = naturalHeight;
-      sw = sh * dstAspect;
-      sx = (naturalWidth - sw) / 2;
-      sy = 0;
-    } else {
-      sw = naturalWidth;
-      sh = sw / dstAspect;
-      sx = 0;
-      sy = (naturalHeight - sh) / 2;
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = cols;
-    canvas.height = rows;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(sampleImg, sx, sy, sw, sh, 0, 0, cols, rows);
-
-    const grid = document.createElement('div');
-    grid.className = 'split-color-field';
-    Object.assign(grid.style, {
-      width: '100%',
-      height: '100%',
-      display: 'grid',
-      gridTemplateColumns: `repeat(${cols}, 1fr)`,
-      gridTemplateRows: `repeat(${rows}, 1fr)`,
-    });
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const cell = document.createElement('div');
-        const px = ctx.getImageData(c, r, 1, 1).data;
-        cell.style.backgroundColor = `rgba(${px[0]}, ${px[1]}, ${px[2]}, 0.45)`;
-        grid.appendChild(cell);
-      }
-    }
-
-    container.appendChild(grid);
-  };
-  sampleImg.src = imgSrc;
-}
-
 function updateSplitLeft(d) {
   selectedFilename = d.filename;
 
@@ -383,44 +362,65 @@ function updateSplitLeft(d) {
 
   left.querySelectorAll('.split-title, .split-media, .split-description').forEach(el => el.remove());
 
+  // ---- Title: a plain white label box sitting in normal document flow
+  // right above the media, not overlaid on top of it. Capped to 90% of
+  // the panel width with wrapping enabled, so even an unbroken string
+  // like a UUID (no spaces to break on) wraps inside the box instead of
+  // spilling past the panel edge.
   const [titlePart1, titlePart2] = splitTitle(d.filename);
 
   const titleWrap = document.createElement('div');
   titleWrap.className = 'split-title';
   Object.assign(titleWrap.style, {
-    position: 'absolute',
-    top: '16px',
-    right: '16px',
-    textAlign: 'right',
-    color: textColor,
+    position: 'relative', // promotes it above bgLayer in paint order -- see note in buildSplitView
+    zIndex: '1',
+    display: 'inline-block',
+    maxWidth: '90%',
+    marginBottom: '14px',
+    padding: '10px 16px',
+    background: '#fff',
+    border: '1px solid #ccc',
+    textAlign: 'center',
+    boxSizing: 'border-box',
   });
 
   const titleLine1 = document.createElement('div');
   titleLine1.textContent = titlePart1;
   Object.assign(titleLine1.style, {
-    fontFamily: "'Ithaca', sans-serif",
-    fontSize: '38px',
-    fontWeight: '400',
-    lineHeight: '1.15',
-    whiteSpace: 'nowrap',
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: '18px',
+    fontWeight: '500',
+    lineHeight: '1.3',
+    color: '#111',
+    whiteSpace: 'normal',
+    overflowWrap: 'anywhere',
   });
-
-  const titleLine2 = document.createElement('div');
-  titleLine2.textContent = titlePart2;
-  Object.assign(titleLine2.style, {
-    fontFamily: "'Ithaca', sans-serif",
-    fontSize: '22px',
-    fontWeight: '400',
-    lineHeight: '1.15',
-    whiteSpace: 'nowrap',
-  });
-
   titleWrap.appendChild(titleLine1);
-  titleWrap.appendChild(titleLine2);
 
+  if (titlePart2) {
+    const titleLine2 = document.createElement('div');
+    titleLine2.textContent = titlePart2;
+    Object.assign(titleLine2.style, {
+      fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: '13px',
+      fontWeight: '400',
+      lineHeight: '1.3',
+      color: '#555',
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
+      marginTop: '2px',
+    });
+    titleWrap.appendChild(titleLine2);
+  }
+
+  left.appendChild(titleWrap);
+
+  // ---- Media ---- capped to 55% (not 65%) so title + photo together
+  // always fit inside the panel's height, with room to spare -- otherwise
+  // flexbox centering pushes the title above the visible viewport.
   const mediaWrap = document.createElement('div');
   mediaWrap.className = 'split-media';
-  Object.assign(mediaWrap.style, { maxWidth: '100%', maxHeight: '65%', position: 'relative' });
+  Object.assign(mediaWrap.style, { maxWidth: '100%', maxHeight: '75%', position: 'relative', zIndex: '1' });
 
   if (d.media_type === 'video') {
     const video = document.createElement('video');
@@ -439,32 +439,24 @@ function updateSplitLeft(d) {
       imageOrientation: 'from-image',
     });
     mediaWrap.appendChild(img);
-
-    // Sample the same photo into the full-panel color field behind it.
-    // Uses the panel's own size (not the photo's displayed size), since
-    // the field is meant to cover the whole background continuously.
-    const probe = new Image();
-    const buildField = () => {
-      if (bgLayer) {
-        renderPhotoColorField(probe.src, probe.naturalWidth, probe.naturalHeight, left.clientWidth, left.clientHeight, bgLayer);
-      }
-    };
-    probe.onload = buildField;
-    probe.onerror = () => {
-      probe.onload = buildField;
-      probe.src = d.thumbnail_path;
-    };
-    probe.src = d.source_path;
   }
 
-  mediaWrap.appendChild(titleWrap);
   left.appendChild(mediaWrap);
+
+  // Paints this row's own extracted cluster colors, scattered on white,
+  // into the background layer -- same for photos and videos, since both
+  // have color1_hex..color6_hex in the CSV regardless of media type.
+  if (bgLayer) {
+    renderSplitScatter(d, bgLayer);
+  }
 
   if (d.description && d.description.trim() !== '') {
     const description = document.createElement('p');
     description.className = 'split-description';
     description.textContent = d.description;
     Object.assign(description.style, {
+      position: 'relative',
+      zIndex: '1',
       fontSize: '14px',
       color: textColor,
       marginTop: '16px',
