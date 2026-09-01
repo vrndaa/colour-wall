@@ -1,6 +1,8 @@
 let allRows = [];
 let selectedCategories = new Set(); // empty set = "all"
-let selectedFilename = null;
+let selectedId = null; // d.source_path -- unique per row, unlike d.filename
+                        // once filenames become human-readable place names
+                        // that can repeat across different photos
 
 // A reusable SVG grain filter, injected once. Any element, SVG shape or
 // plain HTML div, can pick it up with filter: url(#grain-filter).
@@ -30,7 +32,7 @@ function getFilteredRows() {
 // zigzag border's fill instead (see updateSplitLeft).
 function syncSelectedTile() {
   document.querySelectorAll('.swatch').forEach(el => {
-    el.classList.toggle('selected', el.dataset.filename === selectedFilename);
+    el.classList.toggle('selected', el.dataset.id === selectedId);
   });
 }
 
@@ -127,7 +129,7 @@ function renderSplitScatter(d, container) {
   const colors = getClusterColors(d).map(c => c.hex);
   if (colors.length === 0) return;
 
-  const rand = seededRandom(d.filename); // same photo -> same layout every time
+  const rand = seededRandom(d.source_path); // same photo -> same layout every time
   const count = 75;
 
   for (let i = 0; i < count; i++) {
@@ -366,7 +368,7 @@ function splitTitle(filename) {
 }
 
 function updateSplitLeft(d) {
-  selectedFilename = d.filename;
+  selectedId = d.source_path;
 
   const left = document.getElementById('split-left');
   const bgLayer = document.getElementById('split-left-bg');
@@ -436,7 +438,7 @@ function updateSplitLeft(d) {
   // flexbox centering pushes the title above the visible viewport.
   const mediaWrap = document.createElement('div');
   mediaWrap.className = 'split-media';
-  Object.assign(mediaWrap.style, { maxWidth: '100%', maxHeight: '55%', position: 'relative', zIndex: '1' });
+  Object.assign(mediaWrap.style, { maxWidth: '100%', maxHeight: '75%', position: 'relative', zIndex: '1' });
 
   if (d.media_type === 'video') {
     const video = document.createElement('video');
@@ -500,6 +502,7 @@ function renderSplitGrid() {
     const tile = document.createElement('div');
     tile.className = 'swatch';
     tile.dataset.filename = d.filename;
+    tile.dataset.id = d.source_path;
     tile.title = `${d.filename} — ${d.dominant_hex}`;
     tile.style.cursor = 'pointer';
     tile.addEventListener('click', () => updateSplitLeft(d));
