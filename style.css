@@ -92,6 +92,10 @@ html, body {
   filter: url(#grain-filter);
 }
 
+.swatch.selected {
+  border: 3px solid #fff;
+}
+
 .swatch.selected .swatch-fill {
   background-color: transparent;
 }
@@ -179,10 +183,11 @@ html, body {
 /* ---- Divider grip mark: always visible, not just a hover cursor, so the
    panel is obviously draggable to resize ---- */
 .split-divider-grip {
-  font-size: 12px;
+  font-size: 22px;
+  font-weight: bold;
   line-height: 1;
   color: #888;
-  letter-spacing: -1px;
+  letter-spacing: -2px;
   pointer-events: none;
   user-select: none;
 }
