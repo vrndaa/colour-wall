@@ -271,8 +271,19 @@ function buildSplitView() {
     flexShrink: '0',
     background: '#ddd',
     cursor: 'col-resize',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   });
   divider.addEventListener('mousedown', startDrag);
+
+  // Always-visible grip mark, not just a hover cursor change, so it's
+  // obvious up front that this bar drags to resize the two panels.
+  const dividerGrip = document.createElement('div');
+  dividerGrip.className = 'split-divider-grip';
+  dividerGrip.textContent = '||';
+  divider.appendChild(dividerGrip);
 
   const right = document.createElement('div');
   right.id = 'split-right';
@@ -284,6 +295,11 @@ function buildSplitView() {
   });
 
   right.appendChild(buildFilterBar());
+
+  const hint = document.createElement('p');
+  hint.className = 'split-hint';
+  hint.textContent = 'click on the boxes to reveal memory';
+  right.appendChild(hint);
 
   const gridContainer = document.createElement('div');
   gridContainer.id = 'split-grid-container';
@@ -420,7 +436,7 @@ function updateSplitLeft(d) {
   // flexbox centering pushes the title above the visible viewport.
   const mediaWrap = document.createElement('div');
   mediaWrap.className = 'split-media';
-  Object.assign(mediaWrap.style, { maxWidth: '100%', maxHeight: '75%', position: 'relative', zIndex: '1' });
+  Object.assign(mediaWrap.style, { maxWidth: '100%', maxHeight: '55%', position: 'relative', zIndex: '1' });
 
   if (d.media_type === 'video') {
     const video = document.createElement('video');

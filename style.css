@@ -168,3 +168,21 @@ html, body {
 .split-scatter-tile {
   position: absolute;
 }
+
+/* ---- Split-right hint line, under the filter bar ---- */
+.split-hint {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 14px;
+}
+
+/* ---- Divider grip mark: always visible, not just a hover cursor, so the
+   panel is obviously draggable to resize ---- */
+.split-divider-grip {
+  font-size: 12px;
+  line-height: 1;
+  color: #888;
+  letter-spacing: -1px;
+  pointer-events: none;
+  user-select: none;
+}
